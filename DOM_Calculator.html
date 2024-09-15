@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Calculator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            max-width: 500px;
+            margin-top: 50px;
+        }
+        button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h2>Calculator</h2>
+        <div id="calculator"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const calculatorDiv = document.getElementById("calculator");
+
+            // Function to create buttons dynamically
+            function createButton(value, container) {
+                const button = document.createElement("button");
+                button.textContent = value;
+                button.className = "btn btn-primary";
+                button.onclick = () => handleButtonClick(value);
+                container.appendChild(button);
+            }
+
+            // Create the display screen for the calculator
+            const display = document.createElement("input");
+            display.id = "display";
+            display.className = "form-control mb-2 text-right";
+            display.disabled = true;
+            calculatorDiv.appendChild(display);
+
+            // Container for buttons
+            const buttonContainer = document.createElement("div");
+            calculatorDiv.appendChild(buttonContainer);
+
+            // Buttons for numbers, operators, and memory
+            const buttons = [
+                '7', '8', '9', '+', 'M+', '4', '5', '6', '-', 'M-', '1', '2', '3', '*', 'MC', '0', '.', '=', '/', '%'
+            ];
+
+            buttons.forEach(button => createButton(button, buttonContainer));
+
+            let expression = "";
+            let memory = localStorage.getItem("memory") ? parseFloat(localStorage.getItem("memory")) : 0;
+
+            function handleButtonClick(value) {
+                if (value === "=") {
+                    try {
+                        const result = eval(expression); // Calculate the result
+                        display.value = result;
+                        expression = result.toString();
+                    } catch (e) {
+                        alert("Invalid Expression");
+                    }
+                } else if (value === "M+") {
+                    memory += parseFloat(display.value || "0");
+                    localStorage.setItem("memory", memory);
+                } else if (value === "M-") {
+                    memory -= parseFloat(display.value || "0");
+                    localStorage.setItem("memory", memory);
+                } else if (value === "MC") {
+                    memory = 0;
+                    localStorage.setItem("memory", memory);
+                } else {
+                    expression += value;
+                    display.value = expression;
+                }
+            }
+
+            // Keyboard event handler
+            document.addEventListener("keydown", function (e) {
+                if (/[0-9+\-*/%=.]/.test(e.key)) {
+                    handleButtonClick(e.key);
+                } else if (e.key === "Enter") {
+                    handleButtonClick("=");
+                } else {
+                    alert("Only numbers are allowed");
+                }
+            });
+        });
+
+        // Test suite (optional)
+        document.addEventListener("DOMContentLoaded", function () {
+            const display = document.getElementById("display");
+
+            const testCases = [
+                { input: '1+1=', expected: '2' },
+                { input: '2*3=', expected: '6' },
+                { input: '9-5=', expected: '4' },
+                { input: '6/2=', expected: '3' },
+                { input: '10%3=', expected: '1' }
+            ];
+
+            testCases.forEach(({ input, expected }, index) => {
+                const expression = input.slice(0, -1);
+                expression.split('').forEach(char => handleButtonClick(char));
+                handleButtonClick('=');
+
+                const result = display.value;
+                console.assert(result === expected, 'Test ${index + 1} failed: Expected ${expected}, got ${result}');
+            });
+
+            console.log("All tests passed!");
+        });
+    </script>
+</body>
+</html>
